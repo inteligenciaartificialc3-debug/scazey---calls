@@ -1,0 +1,33 @@
+name: Build Scazey APK
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Crear app
+        run: |
+          mkdir -p app/src/main/java/com/scazey/calls
+          echo "include ':app'" > settings.gradle
+          echo "buildscript{repositories{google();mavenCentral()} dependencies{classpath 'com.android.tools.build:gradle:8.1.4'}} allprojects{repositories{google();mavenCentral()}}" > build.gradle
+          echo "apply plugin: 'com.android.application'
+          android{namespace 'com.scazey.calls';compileSdk 34;defaultConfig{applicationId 'com.scazey.calls';minSdk 26;targetSdk 34;versionCode 1;versionName '1.0'};buildTypes{debug{}}}; dependencies{implementation 'androidx.appcompat:appcompat:1.6.1'}" > app/build.gradle
+          mkdir -p app/src/main
+          printf '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><uses-permission android:name="android.permission.CALL_PHONE"/><application android:label="Scazey Calls"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter><intent-filter><action android:name="android.intent.action.DIAL"/><category android:name="android.intent.category.DEFAULT"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
+          printf 'package com.scazey.calls
+          import android.os.Bundle; import android.widget.TextView; import androidx.appcompat.app.AppCompatActivity
+          class MainActivity:AppCompatActivity(){override fun onCreate(b:Bundle?){super.onCreate(b);val t=TextView(this);t.text="SCAZEY CALLS 7511 4304 ACTIVO";t.textSize=24f;setContentView(t)}}' > app/src/main/java/com/scazey/calls/MainActivity.kt
+      - name: Compilar APK
+        run: |
+          gradle wrapper --gradle-version 8.4
+          chmod +x gradlew
+         ./gradlew assembleDebug
+      - name: Subir APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Scazey-APK-REAL
+          path: app/build/outputs/apk/debug/app-debug.apk
